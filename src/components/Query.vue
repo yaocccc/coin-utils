@@ -1,15 +1,9 @@
 <template>
-    <br />
-    <n-grid x-gap="8" cols="12">
-        <n-gi span="10" offset="1">
-            <n-space vertical>
-                <n-input v-model:value="addresses" type="textarea" placeholder="输入地址 按行分割" />
-            </n-space>
-        </n-gi>
-    </n-grid>
-    <br />
-    <n-grid x-gap="8" cols="12">
-        <n-gi span="2" offset="1">
+    <n-space vertical>
+        <n-input v-model:value="addresses" type="textarea" placeholder="输入地址 按行分割" />
+    </n-space>
+    <n-grid x-gap="8" cols="12" style="margin-top: 20px">
+        <n-gi span="2">
             <n-select v-model:value="target" :options="options" />
         </n-gi>
         <n-gi span="3" v-if="target == '其他'">
@@ -21,30 +15,13 @@
     </n-grid>
     <br />
 
-    <n-grid x-gap="8" cols="12">
-        <n-gi span="10" offset="1">
-            <n-data-table :columns="columns" :data="rows" />
-        </n-gi>
-    </n-grid>
+    <n-data-table :columns="columns" :data="rows" />
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { NSelect, NSpace, NInput, NButton, NGi, NGrid, NDataTable } from 'naive-ui';
 import { ethers } from 'ethers';
-
-const sGet = (key: string) => {
-    try {
-        return typeof Storage !== 'undefined' ? localStorage.getItem(key) : null;
-    } catch (e) {
-        return null;
-    }
-};
-const sSet = (key: string, value: any) => {
-    try {
-        typeof Storage !== 'undefined' && localStorage.setItem(key, value);
-    } catch (e) {}
-};
+import { sGet, sSet } from '../js/utils';
 
 const provider = new ethers.providers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
 const abi = [
@@ -60,15 +37,7 @@ const abi = [
 
 export default defineComponent({
     name: 'Query',
-    components: {
-        NInput,
-        NSpace,
-        NGi,
-        NGrid,
-        NButton,
-        NSelect,
-        NDataTable,
-    },
+    components: {},
     setup() {
         return {
             addresses: ref(sGet('addresses') || ''),
