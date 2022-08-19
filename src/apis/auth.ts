@@ -1,10 +1,9 @@
-import axios from 'axios';
+import axios from './common';
 
 export const api = {
     checkAuth: async () => {
         const bus = window.$bus;
         const address = bus.address;
-        console.log(window.$message);
         if (address === '') window.$message.error('Please connect wallet first');
 
         try {

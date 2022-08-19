@@ -21,6 +21,7 @@ declare module '@vue/runtime-core' {
     NInputNumber: typeof import('naive-ui')['NInputNumber']
     NLauout: typeof import('naive-ui')['NLauout']
     NLayout: typeof import('naive-ui')['NLayout']
+    NLog: typeof import('naive-ui')['NLog']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     NPageHeader: typeof import('naive-ui')['NPageHeader']
     NPopover: typeof import('naive-ui')['NPopover']
@@ -31,6 +32,9 @@ declare module '@vue/runtime-core' {
     NSpin: typeof import('naive-ui')['NSpin']
     NTabPane: typeof import('naive-ui')['NTabPane']
     NTabs: typeof import('naive-ui')['NTabs']
+    NTimeline: typeof import('naive-ui')['NTimeline']
+    NTimelineItem: typeof import('naive-ui')['NTimelineItem']
+    NTimePicker: typeof import('naive-ui')['NTimePicker']
     Presale: typeof import('./src/components/Presale.vue')['default']
     Query: typeof import('./src/components/Query.vue')['default']
   }

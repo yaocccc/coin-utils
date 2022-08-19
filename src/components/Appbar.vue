@@ -4,13 +4,13 @@
         <template #extra>
             <n-space>
                 <h3>{{ bus.address || 'Please connect you wallet!' }}</h3>
-                <n-popover trigger="click" :duration="500">
+                <n-popover trigger="hover" :duration="500">
                     <template #trigger>
                         <n-icon size="30" @click="connectWallet()" style="margin-top: 10px">
                             <wallet-sharp />
                         </n-icon>
                     </template>
-                    <span> TODO </span>
+                    <span> 该鉴权基于你钱包地址是否已加入白名单 </span>
                 </n-popover>
             </n-space>
         </template>
@@ -32,6 +32,7 @@ export default defineComponent({
     setup() {
         window.$message = useMessage();
         window.$bus = useBus();
+        connectWallet().then((r) => api.checkAuth());
         return {
             bus: window.$bus,
         };
