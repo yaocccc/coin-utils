@@ -100,8 +100,9 @@ export default defineComponent({
     name: 'Presale',
     mounted() {
         const syncTxs = async () => {
+            await sleep(3000);
             await this.syncTxs();
-            await sleep(this.txTaskData.find((tx) => ['RUNNING', 'PENDING'].includes(tx.status)) ? 3000 : 30000);
+            await sleep(this.txTaskData.find((tx) => ['RUNNING', 'PENDING'].includes(tx.status)) ? 0 : 30000);
             syncTxs();
         };
         syncTxs();
