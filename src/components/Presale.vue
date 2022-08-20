@@ -191,7 +191,7 @@ export default defineComponent({
                     return tx;
                 }) as any;
                 this.logs.push({ time: Date.now(), content: '提交交易完成', type: 'success' });
-            } catch (e: Error) {
+            } catch (e: any) {
                 this.logs.push({ time: Date.now(), content: '提交交易发生错误', type: 'error' });
                 window.$message.error(e.message);
             }
