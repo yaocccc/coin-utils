@@ -1,29 +1,30 @@
 import axios from 'axios';
+import qs from 'qs';
 
 var instance = axios.create({
     // baseURL: import.meta.env.VITE_RES_URL, //接口统一域名
     timeout: 60000,
     headers: {
-        'Content-Type': 'application/json;charset=UTF-8;',
+        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
     },
 });
 
 instance.interceptors.request.use(
     (config: any) => {
         if (window.$bus.address) config.headers.address = window.$bus.address;
-        if (config.method === 'POST') {
-            config.data = JSON.stringify(config.data);
+        console.log(config.method)
+        if (config.method === 'post' || config.method === 'put') {
+            config.data = qs.stringify(config.data);
+            console.log(config.data)
         }
         return config;
     },
-    (error) =>
-        Promise.reject(error)
+    (error) => Promise.reject(error)
 );
-
 
 instance.interceptors.response.use(
     (response) => {
-        return response
+        return response;
     },
     (error) => {
         //响应错误

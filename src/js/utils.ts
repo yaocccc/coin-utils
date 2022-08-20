@@ -10,6 +10,7 @@ const sSet = (key: string, value: any) => {
         typeof Storage !== 'undefined' && localStorage.setItem(key, value);
     } catch (e) {}
 };
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export {
-    sGet, sSet
+    sGet, sSet, sleep
 }

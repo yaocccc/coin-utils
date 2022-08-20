@@ -49,7 +49,8 @@
         <n-form-item label="任务参数: ">
             <n-form inline :label-width="80">
                 <n-form-item label="开始时间(时区: Asia/Shanghai)">
-                    <n-time-picker v-model:value="form.startTime" time-zone="Asia/Shanghai" :status="validate.startTime" />
+                    <n-date-picker v-model:value="form.startTime" time-zone="Asia/Shanghai" type="datetime" :status="validate.startTime" />
+                    <pre>{{ JSON.stringify(form.startTime) }}</pre>
                 </n-form-item>
                 <n-form-item label="最大重试次数">
                     <n-input-number v-model:value="form.retry" placeholder="retry" :status="validate.retry" />
@@ -72,7 +73,7 @@
     <h2>
         任务列表 &nbsp;&nbsp;
         <n-button tertiary type="error" @click="submit">清空任务列表</n-button>
-        <n-button tertiary type="default" @click="submit" style="margin-left: 10px">刷新列表</n-button>
+        <n-button tertiary type="default" @click="syncTxs" style="margin-left: 10px">刷新列表</n-button>
     </h2>
     <n-data-table :columns="txTaskColumns" :data="txTaskData" />
     <h2>日志</h2>
@@ -84,28 +85,27 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import { PLATFORM } from '../types';
-import { sGet, sSet } from '../js/utils';
-import axios from '../apis/common';
+import { sGet, sSet, sleep } from '../js/utils';
 import { getProvider, getWallet } from '../eth/provider';
 import { ethers } from 'ethers';
+import { api, TxRequest } from '../apis/tx';
 
 // TODO 参数校验
 // TODO 前端打包交易
 // TODO 权限校验
 
 type Tx = { address: string; private_key: string; bnb: string; signedTx: string; startTime: number; status: string };
-type TxRequest = {
-    address: string;
-    signedTx: string;
-    startTime: number;
-    endTime: number;
-    retry: number;
-    retryDelay: number;
-    timeDiff: number;
-};
 
 export default defineComponent({
     name: 'Presale',
+    mounted() {
+        const syncTxs = async () => {
+            await this.syncTxs();
+            await sleep(this.txTaskData.find((tx) => ['RUNNING', 'PENDING'].includes(tx.status)) ? 3000 : 30000);
+            syncTxs();
+        };
+        syncTxs();
+    },
     setup() {
         let form = {
             platform: 'pinksale' as PLATFORM,
@@ -159,15 +159,37 @@ export default defineComponent({
         };
     },
     methods: {
+        async syncTxs() {
+            this.txTaskData = await api.getTxs().then((r) => {
+                return r.map((tx) => {
+                    tx.signedTx = tx.signedTx.substring(0, 10) + '...';
+                    return tx;
+                }) as any;
+            });
+        },
         async submit() {
             this.loading = true;
             try {
                 this.logs.push({ time: Date.now(), content: '提交交易', type: '' });
+                if (this.txTaskData.length) {
+                    const ok = confirm('已有交易正在等待，是否先清空原有的交易再继续？');
+                    if (ok) {
+                    } else {
+                        this.logs.push({ time: Date.now(), content: '提交交易取消', type: 'error' });
+                        this.loading = false;
+                        window.$message.error('已取消提交动作');
+                        return;
+                    }
+                }
                 const clone = { ...this.form };
                 // clone.private_keys = ''; // 脱敏
                 sSet('presale_form', JSON.stringify(clone));
-                const res = await axios.get('/api/tx');
                 const txs = await this.signTxs();
+                const res = await api.putTxs(txs);
+                this.txTaskData = res.map((tx) => {
+                    tx.signedTx = '';
+                    return tx;
+                }) as any;
                 this.logs.push({ time: Date.now(), content: '提交交易完成', type: 'success' });
             } catch (e: Error) {
                 this.logs.push({ time: Date.now(), content: '提交交易发生错误', type: 'error' });
@@ -177,7 +199,6 @@ export default defineComponent({
         },
         async signTxs() {
             this.logs.push({ time: Date.now(), content: '开始签名交易', type: '' });
-            const provider = getProvider();
             const dataByPlatform: any = {
                 pinksale: '0xd7bb99ba',
                 maplesale: '0x73e888fd0000000000000000000000000000000000000000000000000000000000000000',
@@ -187,6 +208,8 @@ export default defineComponent({
                 .split('\n')
                 .map((p) => p.trim())
                 .filter((p) => !!p);
+            const addresses = private_keys.map((p) => new ethers.Wallet(p).address);
+            const nonces = await api.getNonces(addresses);
             for (const private_key of private_keys) {
                 const wallet = getWallet(private_key);
                 const tx: TxRequest = {
@@ -199,9 +222,8 @@ export default defineComponent({
                     timeDiff: this.form.timeDiff,
                 };
 
-                const nonce = await provider.getTransactionCount(wallet.address);
                 const txParams = {
-                    nonce,
+                    nonce: nonces.find((n) => n.address === wallet.address)?.nonce || 0,
                     gasPrice: this.form.gasPrice * 1e9,
                     gasLimit: this.form.gasLimit,
                     to: this.form.token,
